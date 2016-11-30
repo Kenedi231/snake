@@ -1,5 +1,7 @@
 #include <iostream>
 #include <conio.h>
+#include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 
 #pragma warning(disable:4996) // POSIX name deprecated
 // Свойство головы змейки
@@ -27,6 +29,10 @@ const int mapheight = 20;
 
 const int size = mapwidth * mapheight;
 
+// Размеры окна
+const int screenWidth = 800;
+const int screenHeight = 600;
+
 enum Direction
 {
 	DIRECTION_LEFT = 3,
@@ -44,6 +50,10 @@ int main()
 // Основная функция игры
 void run()
 {
+	// Инициализация окна
+	sf::ContextSettings settings;
+	settings.antialiasingLevel = 8;
+	sf::RenderWindow window(sf::VideoMode(screenWidth, screenHeight), "Analog Clock", sf::Style::Close, settings);
 	// Проверка на запуск игры
 	bool running = true;
 
