@@ -1,9 +1,11 @@
 #include <iostream>
 #include <conio.h>
+#include <windows.h>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 
-#pragma warning(disable:4996) // POSIX name deprecated
+
+using namespace sf;
 // Свойство головы змейки
 struct properties
 {
@@ -13,15 +15,11 @@ struct properties
 };
 
 void run();
-void printMap(int * map);
+void printMap(int * map, RenderWindow& window);
 void initMap(int * map, properties& snakeHead);
 void move(int dx, int dy, bool * running, int * map, int * food, properties& snakeHead);
 void update(bool* running, int * map, int * food, properties& snakeHead);
-void changeDirection(char key, properties& snakeHead);
-void clearScreen();
 void generateFood(int * map);
-
-char getMapValue(int value);
 
 // Габаритные размеры карты
 const int mapwidth = 20;
@@ -30,8 +28,10 @@ const int mapheight = 20;
 const int size = mapwidth * mapheight;
 
 // Размеры окна
-const int screenWidth = 800;
+const int screenWidth = 600;
 const int screenHeight = 600;
+const int widthCell = screenWidth / mapwidth;
+const int heightCell = screenHeight / mapheight;
 
 enum Direction
 {
@@ -51,9 +51,10 @@ int main()
 void run()
 {
 	// Инициализация окна
-	sf::ContextSettings settings;
+	ContextSettings settings;
 	settings.antialiasingLevel = 8;
-	sf::RenderWindow window(sf::VideoMode(screenWidth, screenHeight), "Analog Clock", sf::Style::Close, settings);
+	RenderWindow window(VideoMode(screenWidth, screenHeight), "Snake", Style::Close, settings);
+	window.setKeyRepeatEnabled(false);
 	// Проверка на запуск игры
 	bool running = true;
 
@@ -64,48 +65,38 @@ void run()
 	int map[size] = { 0 };
 	properties snakeHead;
 	initMap(map, snakeHead);
-	while (running) {
-		// Если нажата клавиша
-		if (kbhit()) {
+	while (window.isOpen()) {
+		// Инициализация собитыя
+		Event event;
+		while (window.pollEvent(event))
+		{
+			// Окно закрывается при выходе
+			if (event.type == Event::Closed)
+				window.close();
 			// Изменение направления взависимости от нажатой клавиши
-			changeDirection(getch(), snakeHead);
+			if (event.type == sf::Event::KeyReleased)
+			{
+				if (event.key.code == (Keyboard::Up)) if (snakeHead.direction != DIRECTION_DOWN) snakeHead.direction = DIRECTION_UP;
+				if (event.key.code == (Keyboard::Right)) if (snakeHead.direction != DIRECTION_LEFT) snakeHead.direction = DIRECTION_RIGTH;
+				if (event.key.code == (Keyboard::Down)) if (snakeHead.direction != DIRECTION_UP) snakeHead.direction = DIRECTION_DOWN;
+				if (event.key.code == (Keyboard::Left)) if (snakeHead.direction != DIRECTION_RIGTH) snakeHead.direction = DIRECTION_LEFT;
+			}
 		}
 		// Обновление карты
 		update(&running, map, &food, snakeHead);
 
 		// Очистка экрана
-		clearScreen();
+		window.clear(Color::White);
 
 		// Отрисовка карты
-		printMap(map);
+		printMap(map, window);
 
-		// Задержка в 0.1 секунд
-		_sleep(100);
+		Sleep(500);
 	}
 
 	// Печать текста о завершении игры
-	std::cout << "\t\t!!!Game over!" << std::endl << "\t\tYour score is: " << food;
-
-	// Запрещает консоли закрыться мгновенно
-	std::cin.ignore();
-}
-
-// Меняет направления от клавиши
-void changeDirection(char key, properties& snakeHead) {
-	switch (key) {
-	case 'w':
-		if (snakeHead.direction != DIRECTION_DOWN) snakeHead.direction = DIRECTION_UP;
-		break;
-	case 'd':
-		if (snakeHead.direction != DIRECTION_LEFT) snakeHead.direction = DIRECTION_RIGTH;
-		break;
-	case 's':
-		if (snakeHead.direction != DIRECTION_UP) snakeHead.direction = DIRECTION_DOWN;
-		break;
-	case 'a':
-		if (snakeHead.direction != DIRECTION_RIGTH) snakeHead.direction = DIRECTION_LEFT;
-		break;
-	}
+	std::cout << "\t\t!!!Game over!" << std::endl << "\t\tYour score is: " << food << std::endl;
+	system("pause");
 }
 
 // Перемещение головы змея в новое место
@@ -125,7 +116,7 @@ void move(int dx, int dy, bool * running, int * map, int * food, properties& sna
 
 	// Проверка места на свободность
 	else if (map[newx + newy * mapwidth] != 0) {
-		*running = false;
+		
 	}
 
 	// Перемещение головы в новое место
@@ -133,12 +124,6 @@ void move(int dx, int dy, bool * running, int * map, int * food, properties& sna
 	snakeHead.headypos = newy;
 	map[snakeHead.headxpos + snakeHead.headypos * mapwidth] = *food + 1;
 
-}
-
-// Очистка экрана
-void clearScreen() {
-	// Очистка экрана
-	system("cls");
 }
 
 // Генерация новой еды на карте
@@ -203,30 +188,34 @@ void initMap(int * map, properties& snakeHead)
 }
 
 // Печать карты в консоли
-void printMap(int * map)
+void printMap(int * map, RenderWindow& window)
 {
+	// Создаём блоки для карты
+	RectangleShape block(Vector2f(widthCell, heightCell));
+	block.setFillColor(Color(Color::Black));
+	int tempVar;
 	for (int y = 0; y < mapwidth; ++y) {
 		for (int x = 0; x < mapheight; ++x) {
 			// Печать значений на x, y
-			std::cout << getMapValue(map[x + y * mapwidth]);
+			tempVar = map[x + y * mapwidth];
+			if (tempVar != 0)
+			{
+				block.setPosition(x * widthCell, y * heightCell);
+				if (tempVar > 0)
+				{
+					block.setFillColor(Color(Color::Green));
+				}
+				else if (tempVar == -1)
+				{
+					block.setFillColor(Color(Color::Black));
+				}
+				else if (tempVar == -2)
+				{
+					block.setFillColor(Color(Color::Red));
+				}
+				window.draw(block);
+			}
 		}
-		// Завершает линию для следующего значения x
-		std::cout << std::endl;
 	}
-}
-
-// Возращает графический символ для отображение его на карте
-char getMapValue(int value)
-{
-	// Возращает часть тела змейки
-	if (value > 0) return 'o';
-
-	switch (value) {
-		// Возращает стену
-	case -1: return 'X';
-		// Возращает еду
-	case -2: return 'O';
-	}
-
-	return ' ';
+	window.display();
 }
