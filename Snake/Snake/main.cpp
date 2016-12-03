@@ -1,6 +1,7 @@
 #include <iostream>
 #include <conio.h>
 #include <windows.h>
+#include <sstream>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 
@@ -17,8 +18,8 @@ struct properties
 void run();
 void printMap(int * map, RenderWindow& window);
 void initMap(int * map, properties& snakeHead);
-void move(int dx, int dy, bool * running, int * map, int * food, properties& snakeHead);
-void update(bool* running, int * map, int * food, properties& snakeHead);
+void move(int dx, int dy, bool * gameOver, int * map, int * food, properties& snakeHead);
+void update(bool* gameOver, int * map, int * food, properties& snakeHead);
 void generateFood(int * map);
 
 // Габаритные размеры карты
@@ -55,8 +56,15 @@ void run()
 	settings.antialiasingLevel = 8;
 	RenderWindow window(VideoMode(screenWidth, screenHeight), "Snake", Style::Close, settings);
 	window.setKeyRepeatEnabled(false);
+	// Сообщение о конце игры(инициализация)
+	Font font;
+	font.loadFromFile("resourses/font.ttf");
+	Text text("", font, 20);
+	text.setFillColor(Color::Black);
+	std::ostringstream playerScoreString;
+	text.setPosition(window.getSize().x / 2.0f, window.getSize().y / 2.0f);
 	// Проверка на запуск игры
-	bool running = true;
+	bool gameOver = false;
 
 	// Кол-во еды у змейки (Длина тела)
 	int food = 3;
@@ -83,24 +91,29 @@ void run()
 			}
 		}
 		// Обновление карты
-		update(&running, map, &food, snakeHead);
+		update(&gameOver, map, &food, snakeHead);
 
 		// Очистка экрана
 		window.clear(Color::White);
+		if (gameOver)
+		{
+			playerScoreString << food;
+			text.setString("\tGame Over! \nYour score is " + playerScoreString.str());
+			window.draw(text);
+			window.display();
+			Sleep(3000);
+			window.close();
+		}
 
 		// Отрисовка карты
 		printMap(map, window);
 
 		Sleep(500);
 	}
-
-	// Печать текста о завершении игры
-	std::cout << "\t\t!!!Game over!" << std::endl << "\t\tYour score is: " << food << std::endl;
-	system("pause");
 }
 
 // Перемещение головы змея в новое место
-void move(int dx, int dy, bool * running, int * map, int * food, properties& snakeHead) {
+void move(int dx, int dy, bool * gameOver, int * map, int * food, properties& snakeHead) {
 	// Определить где находися голова
 	int newx = snakeHead.headxpos + dx;
 	int newy = snakeHead.headypos + dy;
@@ -116,7 +129,7 @@ void move(int dx, int dy, bool * running, int * map, int * food, properties& sna
 
 	// Проверка места на свободность
 	else if (map[newx + newy * mapwidth] != 0) {
-		
+		*gameOver = true;
 	}
 
 	// Перемещение головы в новое место
@@ -143,16 +156,16 @@ void generateFood(int * map) {
 }
 
 // Обновление карты
-void update(bool* running, int * map, int * food, properties& snakeHead) {
+void update(bool* gameOver, int * map, int * food, properties& snakeHead) {
 	// Перемещение в указаном направлении
 	switch (snakeHead.direction) {
-	case DIRECTION_LEFT: move(-1, 0, running, map, food, snakeHead);
+	case DIRECTION_LEFT: move(-1, 0, gameOver, map, food, snakeHead);
 		break;
-	case DIRECTION_UP: move(0, -1, running, map, food, snakeHead);
+	case DIRECTION_UP: move(0, -1, gameOver, map, food, snakeHead);
 		break;
-	case DIRECTION_RIGTH: move(1, 0, running, map, food, snakeHead);
+	case DIRECTION_RIGTH: move(1, 0, gameOver, map, food, snakeHead);
 		break;
-	case DIRECTION_DOWN: move(0, 1, running, map, food, snakeHead);
+	case DIRECTION_DOWN: move(0, 1, gameOver, map, food, snakeHead);
 		break;
 	}
 
