@@ -65,7 +65,6 @@ void run()
 	text.setPosition(window.getSize().x / 2.0f, window.getSize().y / 2.0f);
 	// Проверка на запуск игры
 	bool gameOver = false;
-
 	// Кол-во еды у змейки (Длина тела)
 	int food = 3;
 
@@ -107,7 +106,6 @@ void run()
 
 		// Отрисовка карты
 		printMap(map, window);
-
 		Sleep(500);
 	}
 }
