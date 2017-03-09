@@ -31,8 +31,8 @@ const int size = mapwidth * mapheight;
 // Размеры окна
 const int screenWidth = 600;
 const int screenHeight = 600;
-const int widthCell = screenWidth / mapwidth;
-const int heightCell = screenHeight / mapheight;
+const float widthCell = screenWidth / mapwidth;
+const float heightCell = screenHeight / mapheight;
 
 enum Direction
 {
@@ -65,6 +65,7 @@ void run()
 	text.setPosition(window.getSize().x / 2.0f, window.getSize().y / 2.0f);
 	// Проверка на запуск игры
 	bool gameOver = false;
+	bool move = true;
 	// Кол-во еды у змейки (Длина тела)
 	int food = 3;
 
@@ -81,15 +82,17 @@ void run()
 			if (event.type == Event::Closed)
 				window.close();
 			// Изменение направления взависимости от нажатой клавиши
-			if (event.type == sf::Event::KeyReleased)
+			if (event.type == sf::Event::KeyReleased && move)
 			{
 				if (event.key.code == (Keyboard::Up)) if (snakeHead.direction != DIRECTION_DOWN) snakeHead.direction = DIRECTION_UP;
 				if (event.key.code == (Keyboard::Right)) if (snakeHead.direction != DIRECTION_LEFT) snakeHead.direction = DIRECTION_RIGTH;
 				if (event.key.code == (Keyboard::Down)) if (snakeHead.direction != DIRECTION_UP) snakeHead.direction = DIRECTION_DOWN;
 				if (event.key.code == (Keyboard::Left)) if (snakeHead.direction != DIRECTION_RIGTH) snakeHead.direction = DIRECTION_LEFT;
+				move = false;
 			}
 		}
 		// Обновление карты
+		move = true;
 		update(&gameOver, map, &food, snakeHead);
 
 		// Очистка экрана
@@ -141,6 +144,7 @@ void move(int dx, int dy, bool * gameOver, int * map, int * food, properties& sn
 void generateFood(int * map) {
 	int x = 0;
 	int y = 0;
+	srand(time(NULL));
 	do {
 		// Генерация координат x и y 
 		x = rand() % (mapwidth - 2) + 1;
